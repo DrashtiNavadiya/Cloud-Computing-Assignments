@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  container1:
+    image: drashtinavadiya/container1
+    volumes: 
+      - ./:/app/data/
+    ports:
+      - 6000:6000
+    depends_on:
+      - container2
+    networks:
+      - dockerNetwork 
+
+
+  container2:
+    image: drashtinavadiya/container2
+    ports:
+      - 6005:6005
+    volumes:
+      - ./:/app/data/
+    networks:
+      - dockerNetwork 
+  
+networks:
+  dockerNetwork:
+    driver: bridge
+

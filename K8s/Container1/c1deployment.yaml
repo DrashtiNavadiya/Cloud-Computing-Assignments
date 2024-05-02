@@ -1,0 +1,73 @@
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kubernetes-persistent-volume
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  gcePersistentDisk:
+    pdName: kubernetes-disk
+    fsType: ext4
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kubernetes-persistent-volume-claim
+spec:
+  volumeName: kubernetes-persistent-volume
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+  selector:
+    matchLabels:
+      name: kubernetes-persistent-volume
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container1-deployement
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: c1
+  template:
+    metadata:
+      labels:
+        app: c1
+    spec:
+      containers:
+        - name: container1
+          image: us-central1-docker.pkg.dev/kubernetes-417417/kubernetes/container1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 6000
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/DRASHTI_PV_dir
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kubernetes-persistent-volume-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: c1-service
+spec:
+  selector:
+    app: c1
+  ports:
+    - protocol: TCP
+      port: 6000
+      targetPort: 6000
+  type: LoadBalancer
